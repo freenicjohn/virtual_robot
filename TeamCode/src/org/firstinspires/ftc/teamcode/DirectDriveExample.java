@@ -51,6 +51,10 @@ public class DirectDriveExample extends LinearOpMode {
         double x = gamepad1.left_stick_x;
         double r = gamepad1.right_stick_x;
 
+        // Apply exponential scaling to the joystick values
+        y = Math.signum(y) * Math.pow(y, 2.0);
+        x = Math.signum(x) * Math.pow(x, 2.0);
+
         // Check out https://github.com/freenicjohn/FtcRobotController/blob/10ea65b1cae2b63770d78149a75bdefd3b8b9877/TeamCode/src/main/java/org/firstinspires/ftc/teamcode/docs/OmniWheelControlDerivation.md
         // for the derivation of these equations.
         double powerRightFront = -x + y - r;
