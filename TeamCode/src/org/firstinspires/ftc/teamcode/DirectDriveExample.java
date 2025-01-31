@@ -1,20 +1,27 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.hardware.sparkfun.SparkFunOTOS;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-@TeleOp(name = "SimpleTeleOp")
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
+@TeleOp(name = "DirectDriveExample")
 public class DirectDriveExample extends LinearOpMode {
 
     public DcMotor motorRightFront = null;
     public DcMotor motorRightBack = null;
     public DcMotor motorLeftBack = null;
     public DcMotor motorLeftFront = null;
+    public SparkFunOTOS myOtos = null;
 
     @Override
     public void runOpMode() {
+
+        myOtos = hardwareMap.get(SparkFunOTOS.class, "sensor_otos");
 
         motorLeftBack = hardwareMap.dcMotor.get("back_left_motor");
         motorLeftFront = hardwareMap.dcMotor.get("front_left_motor");
@@ -27,21 +34,23 @@ public class DirectDriveExample extends LinearOpMode {
         motorRightFront.setDirection(DcMotorSimple.Direction.FORWARD);
         motorRightBack.setDirection(DcMotorSimple.Direction.FORWARD);
 
+        configureOtos();
+
         waitForStart();
 
         while (opModeIsActive()) {
+            SparkFunOTOS.Pose2D pos = myOtos.getPosition();
+
             if (gamepad1.right_trigger > 0) {
                 directDriveControl(0.5);
             } else {
-                directDriveControl();
+                directDriveControl(1.0);
             }
 
+            telemetry.addData("Position", "X: %.2f, Y: %.2f, H: %.2f", pos.x, pos.y, pos.h);
+            telemetry.update();
             sleep(20);  // Sleeping here allows the CPU to catch up with other tasks
         }
-    }
-
-    private void directDriveControl() {
-        directDriveControl(1.0);
     }
 
     private void directDriveControl(double speedMultiplier) {
@@ -77,5 +86,26 @@ public class DirectDriveExample extends LinearOpMode {
         motorRightBack.setPower(powerRightBack * speedMultiplier);
         motorLeftBack.setPower(powerLeftBack * speedMultiplier);
         motorLeftFront.setPower(powerLeftFront * speedMultiplier);
+    }
+
+    private void configureOtos() {
+        telemetry.addLine("Configuring OTOS...");
+        telemetry.update();
+
+        myOtos.setLinearUnit(DistanceUnit.INCH);
+        myOtos.setAngularUnit(AngleUnit.DEGREES);
+
+        SparkFunOTOS.Pose2D offset = new SparkFunOTOS.Pose2D(0, 2, 0);
+        myOtos.setOffset(offset);
+        myOtos.setLinearScalar(1.0);
+        myOtos.setAngularScalar(1.0);
+        myOtos.calibrateImu();
+        myOtos.resetTracking();
+        SparkFunOTOS.Pose2D currentPosition = new SparkFunOTOS.Pose2D(0, 0, 0);
+        myOtos.setPosition(currentPosition);
+
+        telemetry.addLine("OTOS configured! Press start to get position data!");
+        telemetry.addLine();
+        telemetry.update();
     }
 }
