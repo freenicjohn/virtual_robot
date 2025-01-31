@@ -1,15 +1,15 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.disabled_samples;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorExImpl;
 
 /**
  * TeleOp op mode to test odometry with three "dead-wheel" encoders. This op mode will work with
  * either the MecBot or the XDriveBot robot configuration.
  */
 @TeleOp(name = "TestOdom", group = "OdomBot")
+@Disabled
 public class TestOdom extends LinearOpMode {
 
     EncBot bot = new EncBot();

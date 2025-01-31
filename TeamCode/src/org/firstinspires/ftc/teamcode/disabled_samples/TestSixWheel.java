@@ -1,19 +1,24 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.disabled_samples;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
-import com.qualcomm.robotcore.hardware.*;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import org.firstinspires.ftc.robotcore.external.navigation.*;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.robotcore.external.navigation.*;
 
-@TeleOp(name = "two wheel demo opmode", group = "TwoWheel")
-public class TwoWheelDemoOpMode extends OpMode {
+@TeleOp(name = "six wheel demo opmode", group = "Six Wheel")
+@Disabled
+public class TestSixWheel extends OpMode {
 
-    private DcMotor left = null;
-    private DcMotor right = null;
+    private DcMotor leftFront = null;
+    private DcMotor leftBack = null;
+    private DcMotor rightFront = null;
+    private DcMotor rightBack = null;
     private BNO055IMU imu = null;
-    private Servo backServo = null;
     private ColorSensor colorSensor = null;
     private DistanceSensor frontDistance = null;
     private DistanceSensor leftDistance = null;
@@ -24,11 +29,13 @@ public class TwoWheelDemoOpMode extends OpMode {
     private int waitForStartTime = 0;
 
     public void init(){
-        left = hardwareMap.dcMotor.get("left_motor");
-        right = hardwareMap.dcMotor.get("right_motor");
-        left.setDirection(DcMotor.Direction.REVERSE);
+        leftFront = hardwareMap.dcMotor.get("left_motor_front");
+        rightFront = hardwareMap.dcMotor.get("right_motor_front");
+        leftBack = hardwareMap.dcMotor.get("left_motor_back");
+        rightBack = hardwareMap.dcMotor.get("right_motor_back");
+        leftFront.setDirection(DcMotor.Direction.REVERSE);
+        leftBack.setDirection(DcMotor.Direction.REVERSE);
         imu = hardwareMap.get(BNO055IMU.class, "imu");
-        backServo = hardwareMap.servo.get("back_servo");
         colorSensor = hardwareMap.colorSensor.get("color_sensor");
         frontDistance = hardwareMap.get(DistanceSensor.class, "front_distance");
         leftDistance = hardwareMap.get(DistanceSensor.class, "left_distance");
@@ -57,33 +64,27 @@ public class TwoWheelDemoOpMode extends OpMode {
     }
 
     public void loop(){
-        if (gamepad1.a){
-            telemetry.addData("a pressed","");
-            left.setPower(-.5);
-            right.setPower(-.5);
-        } else if (gamepad1.y) {
-            telemetry.addData("y pressed", "");
-            left.setPower(0.5);
-            right.setPower(0.5);
-        } else if (gamepad1.b){
-            telemetry.addData("b pressed", "");
-            left.setPower(0.5);
-            right.setPower(-0.5);
-        } else if (gamepad1.x){
-            telemetry.addData("x pressed", "");
-            left.setPower(-0.5);
-            right.setPower(0.5);
-        } else {
-            left.setPower(0);
-            right.setPower(0);
+
+        float drive = -gamepad1.left_stick_y;
+        float steer = gamepad1.right_stick_x;
+        float pLeft = drive + steer;
+        float pRight = drive - steer;
+        float pAbsMax = Math.max(Math.abs(pLeft), Math.abs(pRight));
+        if (pAbsMax > 1){
+            pLeft /= pAbsMax;
+            pRight /= pAbsMax;
         }
-        backServo.setPosition(0.5 - 0.5* gamepad1.left_stick_y);
-        telemetry.addData("Press", "Y-fwd, A-rev, B-Rt, X-Lt");
-        telemetry.addData("Left Gamepad stick controls back servo","");
+        leftFront.setPower(pLeft);
+        leftBack.setPower(pLeft);
+        rightFront.setPower(pRight);
+        rightBack.setPower(pRight);
+
+
         telemetry.addData("Color","R %d  G %d  B %d", colorSensor.red(), colorSensor.green(), colorSensor.blue());
         Orientation orientation = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
         telemetry.addData("Heading"," %.1f", orientation.firstAngle);
-        telemetry.addData("Encoders","Left %d  Right %d", left.getCurrentPosition(), right.getCurrentPosition());
+        telemetry.addData("Encoders","LF %d  LB %d  RF %d  RB %d", leftFront.getCurrentPosition(),
+                leftBack.getCurrentPosition(), rightFront.getCurrentPosition(), rightBack.getCurrentPosition());
         telemetry.addData("Distance", " Fr %.1f  Lt %.1f  Rt %.1f  Bk %.1f  ",
                 frontDistance.getDistance(DistanceUnit.CM), leftDistance.getDistance(DistanceUnit.CM),
                 rightDistance.getDistance(DistanceUnit.CM), backDistance.getDistance(DistanceUnit.CM)

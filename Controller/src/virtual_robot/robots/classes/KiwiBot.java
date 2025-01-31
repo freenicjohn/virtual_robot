@@ -17,7 +17,7 @@ import virtual_robot.util.AngleUtils;
  * KiwiBot is the controller class for the "kiwi_bot.fxml" markup file.
  *
  */
-@BotConfig(name = "Kiwi Bot", filename = "kiwi_bot")
+//@BotConfig(name = "Kiwi Bot", filename = "kiwi_bot")
 public class KiwiBot extends KiwiPhysicsBase {
 
 

@@ -18,7 +18,7 @@ import virtual_robot.util.AngleUtils;
  * MecanumBot is the controller class for the "mecanum_bot.fxml" markup file.
  *
  */
-@BotConfig(name = "Mecanum Bot", filename = "mecanum_bot")
+//@BotConfig(name = "Mecanum Bot", filename = "mecanum_bot")
 public class MecanumBot extends MecanumPhysicsBase {
 
     private ServoImpl servo = null;

@@ -1,5 +1,6 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.disabled_samples;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.*;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -11,6 +12,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.*;
  *
  */
 @TeleOp(name = "arm bot demo", group = "ArmBot")
+@Disabled
 public class ArmBotDemo extends LinearOpMode {
 
     public void runOpMode(){

@@ -18,7 +18,7 @@ import virtual_robot.util.AngleUtils;
  * XDriveBot is the controller class for the "xdrive_bot.fxml" markup file.
  *
  */
-@BotConfig(name = "XDrive Bot", filename = "xdrive_bot")
+//@BotConfig(name = "XDrive Bot", filename = "xdrive_bot")
 public class XDriveBot extends XDrivePhysicsBase {
 
     private CRServoImpl crServo = null;

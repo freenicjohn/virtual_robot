@@ -32,7 +32,7 @@ import virtual_robot.util.AngleUtils;
  *
  * TwoWheelBot is the controller class for the "two_wheel_bot.fxml" markup file.
  */
-@BotConfig(name = "Programming Board", filename = "programming_board")
+//@BotConfig(name = "Programming Board", filename = "programming_board")
 public class ProgrammingBoard extends VirtualBot {
 
     private MotorType MOTOR_TYPE = MotorType.Neverest40;

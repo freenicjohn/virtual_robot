@@ -15,7 +15,7 @@ import virtual_robot.util.AngleUtils;
  * For internal use only. Represents a robot with four mecanum wheels,
  * claw servo, and liftMotor
  */
-@BotConfig(name = "QQ Bot", filename = "qq_bot")
+//@BotConfig(name = "QQ Bot", filename = "qq_bot")
 public class QQ_Bot extends MecanumPhysicsBase {
     private final MotorType encoderMotorType = MotorType.Gobilda192;
     private DeadWheelEncoder rightEncoder = null;

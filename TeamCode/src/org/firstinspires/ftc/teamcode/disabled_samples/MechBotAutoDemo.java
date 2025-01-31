@@ -27,8 +27,8 @@ import virtual_robot.util.AngleUtils;
  * Disabling for now; it was designed to work with Rover Ruckus field
  *
  */
-@Disabled
 @Autonomous(name = "mechbot auto demo", group = "Mechanum")
+@Disabled
 public class MechBotAutoDemo extends LinearOpMode {
 
     DcMotor m1, m2, m3, m4;

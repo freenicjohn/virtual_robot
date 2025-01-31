@@ -40,7 +40,7 @@ import java.util.HashMap;
  * combo box. The filename refers to the fxml file that contains the markup for the graphical UI.
  * Note: the fxml file must be located in the virtual_robot.robots.classes.fxml folder.
  */
-@BotConfig(name = "Arm Bot", filename = "arm_bot")
+//@BotConfig(name = "Arm Bot", filename = "arm_bot")
 public class ArmBot extends MecanumPhysicsBase {
 
     /*

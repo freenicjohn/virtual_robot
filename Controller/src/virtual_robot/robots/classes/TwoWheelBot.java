@@ -19,7 +19,7 @@ import virtual_robot.util.AngleUtils;
  *
  * TwoWheelBot is the controller class for the "two_wheel_bot.fxml" markup file.
  */
-@BotConfig(name = "Two Wheel Bot", filename = "two_wheel_bot")
+//@BotConfig(name = "Two Wheel Bot", filename = "two_wheel_bot")
 public class TwoWheelBot extends TwoWheelPhysicsBase {
 
     private ServoImpl servo = null;
