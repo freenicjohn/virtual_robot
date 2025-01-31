@@ -30,8 +30,11 @@ public class DirectDriveExample extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            directDriveControl();
-            // directDriveControl(0.5);  // Passing a speed multiplier will slow down the robot
+            if (gamepad1.right_trigger > 0) {
+                directDriveControl(0.5);
+            } else {
+                directDriveControl();
+            }
 
             sleep(20);  // Sleeping here allows the CPU to catch up with other tasks
         }
