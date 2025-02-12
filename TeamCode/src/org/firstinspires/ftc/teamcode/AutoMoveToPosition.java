@@ -21,19 +21,32 @@ public class AutoMoveToPosition extends LinearOpMode {
     public DcMotor motorLeftBack = null;
     public DcMotor motorLeftFront = null;
     public SparkFunOTOS myOtos;
-    public Position desiredPosition = new Position(DistanceUnit.INCH, 39.21, 38.37, 0, 0);
-    public YawPitchRollAngles desiredOrientation = new YawPitchRollAngles(AngleUnit.DEGREES, 33.53, 0, 0, 0);
+    public Position desiredPosition = new Position(DistanceUnit.INCH, 37.58, 37.53, 0, 0);
+    public YawPitchRollAngles desiredOrientation = new YawPitchRollAngles(AngleUnit.RADIANS, 0.74, 0, 0, 0);
+    public Position desiredPosition2 = new Position(DistanceUnit.INCH, 43.02, -33.46, 0, 0);
+    public YawPitchRollAngles desiredOrientation2 = new YawPitchRollAngles(AngleUnit.RADIANS, -1.07, 0, 0, 0);
 
     // Tuning variables for position control - go too fast with too tight of tolerances and things will get wacky
-    final double Y_GAIN  =  0.02  ;
-    final double X_GAIN =  0.03 ;
-    final double R_GAIN   =  0.01  ;
-    final double MAX_AUTO_Y = 0.5;
-    final double MAX_AUTO_X = 0.5;
-    final double MAX_AUTO_R  = 0.5;
-    final double Y_TOLERANCE = 0.1;
-    final double X_TOLERANCE = 0.1;
-    final double R_TOLERANCE = 0.001;
+    final double[] Kp = {0.3, 0.3, 0.5};
+    final double[] Ki = {0,0,0};//{0.0001, 0.0001, 0}; // 0.01;
+    final double[] MaxIntegral = {1000, 1000, 10};
+    final double[] Kd = {0.005, 0.005, 0}; // 0.005;
+    public double MAX_AUTO_Y = 1.0;
+    public double MAX_AUTO_X = 1.0;
+    public double MAX_AUTO_R  = 1.0;
+    final double Y_TOLERANCE = 0.5;
+    final double X_TOLERANCE = 0.5;
+    final double R_TOLERANCE = 0.25;
+    // PID error terms
+    double xIntegral = 0;
+    double yIntegral = 0;
+    double rIntegral = 0;
+    double xPreviousError = 0;
+    double yPreviousError = 0;
+    double rPreviousError = 0;
+
+    public int state = 0;
+    public int nextState = 0;
 
     @Override
     public void runOpMode() {
@@ -55,39 +68,106 @@ public class AutoMoveToPosition extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
-            telemetry.addLine("Desired X: " + desiredPosition.x);
-            telemetry.addLine("Desired Y: " + desiredPosition.y);
-            telemetry.addLine("Desired Heading: " + desiredOrientation.getYaw(AngleUnit.DEGREES));
-            telemetry.addLine();
-            telemetry.addLine("X: " + myOtos.getPosition().x);
-            telemetry.addLine("Y: " + myOtos.getPosition().y);
-            telemetry.addLine("Heading: " + myOtos.getPosition().h);
-            telemetry.addLine();
+            if (state==0){
+                if (inPosition(desiredPosition, desiredOrientation)){
+                    resetIntegrals();
+                    nextState = 1;
+                } else {
+                    driveTowards(desiredPosition, desiredOrientation);
+                }
+            } else if (state==1){
+                if (inPosition(desiredPosition2, desiredOrientation2)){
+                    resetIntegrals();
+                    nextState = 0;
+                } else {
+                    driveTowards(desiredPosition2, desiredOrientation2);
+                }
+            }
 
-            double  xError = desiredPosition.x - myOtos.getPosition().x;  // Instead of otos, we should get position and yaw from the AprilTag detection
-            double  yError = desiredPosition.y - myOtos.getPosition().y;
-            double  rError = desiredOrientation.getYaw(AngleUnit.DEGREES) - myOtos.getPosition().h;
+            state = nextState;
 
-            // If everything is working, you should see errors getting smaller and smaller
-            telemetry.addLine("X Error: " + xError);
-            telemetry.addLine("Y Error: " + yError);
-            telemetry.addLine("Heading Error: " + rError);
-
-            // If we are within the error tolerance for any axis, stop moving in that direction
-            xError = Math.abs(xError) < X_TOLERANCE ? 0 : xError;
-            yError = Math.abs(yError) < Y_TOLERANCE ? 0 : yError;
-            rError = Math.abs(rError) < R_TOLERANCE ? 0 : rError;
-
-            // Use the speed and turn "gains" to calculate how we want the robot to move.
-            xError  = Range.clip(xError * X_GAIN, -MAX_AUTO_X, MAX_AUTO_X);
-            yError   = Range.clip(yError * Y_GAIN, -MAX_AUTO_Y, MAX_AUTO_Y) ;
-            rError = Range.clip(rError * R_GAIN, -MAX_AUTO_R, MAX_AUTO_R);
-
-            moveRobot(xError, yError, rError);
-
+            telemetry.addLine("State: " + state);
             telemetry.update();
             sleep(20);  // Sleeping here allows the CPU to catch up with other tasks
         }
+    }
+
+    public boolean inPosition(Position desiredPosition, YawPitchRollAngles desiredOrientation){
+        double  xError = desiredPosition.x - myOtos.getPosition().x;
+        double  yError = desiredPosition.y - myOtos.getPosition().y;
+        double  rError = desiredOrientation.getYaw(AngleUnit.RADIANS) - myOtos.getPosition().h;
+
+        return (Math.abs(xError) < X_TOLERANCE) && (Math.abs(yError) < Y_TOLERANCE) && (Math.abs(rError) < R_TOLERANCE);
+    }
+
+    public void driveTowards(Position desiredPosition, YawPitchRollAngles desiredOrientation){
+        double heading = myOtos.getPosition().h;
+
+        double  xError = desiredPosition.x - myOtos.getPosition().x;
+        double  yError = desiredPosition.y - myOtos.getPosition().y;
+        double  rError = desiredOrientation.getYaw(AngleUnit.RADIANS) - heading;
+
+        // Proportional term
+        double xProportional = xError;
+        double yProportional = yError;
+        double rProportional = rError;
+
+        // Integral term
+        xIntegral += xError;
+        yIntegral += yError;
+        rIntegral += rError;
+        xIntegral = Range.clip(xIntegral, -MaxIntegral[0], MaxIntegral[0]);
+        yIntegral = Range.clip(yIntegral, -MaxIntegral[1], MaxIntegral[1]);
+        rIntegral = Range.clip(rIntegral, -MaxIntegral[2], MaxIntegral[2]);
+
+        // Derivative term
+        double xDerivative = xError - xPreviousError;
+        double yDerivative = yError - yPreviousError;
+        double rDerivative = rError - rPreviousError;
+
+        // PID output
+        double xOutput = (Kp[0] * xProportional) + (Ki[0] * xIntegral) + (Kd[0] * xDerivative);
+        double yOutput = (Kp[1] * yProportional) + (Ki[1] * yIntegral) + (Kd[1] * yDerivative);
+        double rOutput = (Kp[2] * rProportional) + (Ki[2] * rIntegral) + (Kd[2] * rDerivative);
+
+        // Update previous errors
+        xPreviousError = xError;
+        yPreviousError = yError;
+        rPreviousError = rError;
+
+        // Rotate the output values to account for the robot's heading
+        double xRotated = xOutput * Math.cos(heading) - yOutput * Math.sin(heading);
+        double yRotated = xOutput * Math.sin(heading) + yOutput * Math.cos(heading);
+
+        // Clip the outputs to the maximum allowed values
+        xRotated = Range.clip(xRotated, -MAX_AUTO_X, MAX_AUTO_X);
+        yRotated = Range.clip(yRotated, -MAX_AUTO_Y, MAX_AUTO_Y);
+        rOutput = Range.clip(rOutput, -MAX_AUTO_R, MAX_AUTO_R);
+
+        if (Math.abs(rError) < R_TOLERANCE) {
+            moveRobot(xRotated, yRotated, 0);
+        } else {
+            moveRobot(0, 0, rOutput);
+        }
+
+        telemetry.addLine("xProportional: " + xProportional);
+        telemetry.addLine("xIntegral: " + xIntegral);
+        telemetry.addLine("xDerivative: " + xDerivative);
+        telemetry.addLine();
+        telemetry.addLine("yProportional: " + yProportional);
+        telemetry.addLine("yIntegral: " + yIntegral);
+        telemetry.addLine("yDerivative: " + yDerivative);
+        telemetry.addLine();
+        telemetry.addLine("rProportional: " + rProportional);
+        telemetry.addLine("rIntegral: " + rIntegral);
+        telemetry.addLine("rDerivative: " + rDerivative);
+        telemetry.addLine();
+    }
+
+    public void resetIntegrals(){
+        xIntegral = 0;
+        yIntegral = 0;
+        rIntegral = 0;
     }
 
     public void moveRobot(double x, double y, double yaw) {
@@ -121,7 +201,7 @@ public class AutoMoveToPosition extends LinearOpMode {
         telemetry.update();
 
         myOtos.setLinearUnit(DistanceUnit.INCH);
-        myOtos.setAngularUnit(AngleUnit.DEGREES);
+        myOtos.setAngularUnit(AngleUnit.RADIANS);
 
         SparkFunOTOS.Pose2D offset = new SparkFunOTOS.Pose2D(0, 2, 0);
         myOtos.setOffset(offset);
@@ -135,5 +215,12 @@ public class AutoMoveToPosition extends LinearOpMode {
         telemetry.addLine("OTOS configured! Press start to get position data!");
         telemetry.addLine();
         telemetry.update();
+    }
+
+    private void stopMotors() {
+        motorLeftFront.setPower(0);
+        motorRightFront.setPower(0);
+        motorLeftBack.setPower(0);
+        motorRightBack.setPower(0);
     }
 }

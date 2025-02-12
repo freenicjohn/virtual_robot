@@ -93,7 +93,7 @@ public class DirectDriveExample extends LinearOpMode {
         telemetry.update();
 
         myOtos.setLinearUnit(DistanceUnit.INCH);
-        myOtos.setAngularUnit(AngleUnit.DEGREES);
+        myOtos.setAngularUnit(AngleUnit.RADIANS);
 
         SparkFunOTOS.Pose2D offset = new SparkFunOTOS.Pose2D(0, 2, 0);
         myOtos.setOffset(offset);
